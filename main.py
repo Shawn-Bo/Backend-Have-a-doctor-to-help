@@ -100,6 +100,16 @@ def user_edit_info():
     else:
         return me_dao.user_edit_info(username, info)
 
+@server.route('/user/edit_avatar', methods=['post'])
+def user_edit_avatar():
+    username = request.json.get("username")
+    avatar = request.json.get("avatar")
+    print(username, avatar)
+    if me_dao.user_not_exists(username):
+        return {"code": "user_not_exist"}
+    else:
+        return me_dao.user_edit_avatar(username, avatar)
+
 
 # query的维护部分
 """
