@@ -154,10 +154,22 @@ def query_export_session():
     return query_dao.query_export_session(username, session_id)
 
 
+@server.route('/query/publish_session', methods=['post'])
+def query_publish_session():
+    username = request.json.get("username")
+    session_id = request.json.get("session_id")
+    return query_dao.query_publish_session(username, session_id)
+
+
 @server.route('/query/get_exported_sessions', methods=['post'])
 def get_export_sessions():
     username = request.json.get("username")
     return query_dao.query_get_exported_sessions(username)
+
+@server.route('/query/get_public_sessions', methods=['post'])
+def get_public_sessions():
+    return query_dao.query_get_public_sessions()
+
 
 
 @server.route('/query/delete_export_session', methods=['post'])

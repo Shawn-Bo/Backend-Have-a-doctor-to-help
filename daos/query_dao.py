@@ -67,6 +67,27 @@ class QueryDao(object):
             print("导出成功了")
             return {"code": "success"}
 
+    def query_publish_session(self, username, session_id):
+        print("发布会话：", username, session_id)
+        if self.user_not_exists(username):
+            return {"code": "user_not_exist"}
+        else:  # 用户存在，合法什么的
+            # 1. 这段代码将用户的当前session发布出来
+            # 1.1 查询用户目前的session，通过session_id
+            self.cursor.execute(f"SELECT session_json FROM ExportedSessions WHERE session_id='{session_id}'")
+            session_json = self.cursor.fetchall()
+            session_json = session_json[0][0]  # 直接就是个字符串，拿出来又放回去了
+            # ExportedSessions(username TEXT, session_id TEXT, session_json TEXT);
+            # 1.2 确保会话之前没有公开过
+            self.cursor.execute(f"SELECT session_json FROM PublicSessions WHERE session_id='{session_id}'")
+            if len(self.cursor.fetchall())>0:
+                return {"code": "session_already_published"}
+            # 1.3 将用户的会话内容保存至ExportedSessions中
+            self.cursor.execute(f"INSERT INTO PublicSessions VALUES('{username}','{session_id}', '{session_json}');")
+            self.conn.commit()
+            print("发布成功了")
+            return {"code": "success"}
+
     def query_new_session(self, username: str):
         if self.user_not_exists(username):
             return {"code": "user_not_exist"}
@@ -113,6 +134,18 @@ class QueryDao(object):
             self.conn.commit()
             return {"code": "success", "session_list": session_list}
 
+    def query_get_public_sessions(self):
+        # 1. 查表并返回即可
+        self.cursor.execute(f"SELECT * FROM PublicSessions;")
+        res = self.cursor.fetchall()
+        session_list = [
+            {
+                "username": row[0],
+                "start_time": row[1],
+                "session_detail": json.loads(row[2])
+            } for row in res
+        ]
+        return {"code": "success", "session_list": session_list}
 
 query_dao = QueryDao()
 

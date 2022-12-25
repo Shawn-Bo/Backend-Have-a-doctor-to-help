@@ -12,6 +12,7 @@ CREATE TABLE HotQAs(qaid INT, question TEXT, answer TEXT);
 CREATE TABLE Doctors(name TEXT, detail TEXT);
 CREATE TABLE ExportedSessions(username TEXT, session_id TEXT, session_json TEXT);
 CREATE TABLE GoingSessions(username TEXT, session_id TEXT, session_json TEXT);
+CREATE TABLE PublicSessions(username TEXT, session_id TEXT, session_json TEXT);
 
 
 
