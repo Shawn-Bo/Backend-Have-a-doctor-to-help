@@ -100,6 +100,7 @@ def user_edit_info():
     else:
         return me_dao.user_edit_info(username, info)
 
+
 @server.route('/user/edit_avatar', methods=['post'])
 def user_edit_avatar():
     username = request.json.get("username")
@@ -144,6 +145,26 @@ def query_go_session():
     session_id = request.json.get("session_id")
     query_message = request.json.get("query_message")
     return query_dao.query_go_session(username, session_id, query_message)
+
+
+@server.route('/query/export_session', methods=['post'])
+def query_export_session():
+    username = request.json.get("username")
+    session_id = request.json.get("session_id")
+    return query_dao.query_export_session(username, session_id)
+
+
+@server.route('/query/get_exported_sessions', methods=['post'])
+def get_export_sessions():
+    username = request.json.get("username")
+    return query_dao.query_get_exported_sessions(username)
+
+
+@server.route('/query/delete_export_session', methods=['post'])
+def delete_export_session():
+    username = request.json.get("username")
+    exported_session_id = request.json.get("exported_session_id")
+    return query_dao.query_delete_export_session(username, exported_session_id)
 
 
 server.run(port=8888, host="0.0.0.0")

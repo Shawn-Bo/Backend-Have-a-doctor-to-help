@@ -46,17 +46,26 @@ class QueryDao(object):
             print("响应后的对话", response_session_json)
             # 保存对话到数据库
             self.cursor.execute(
-                f"UPDATE GoingSessions SET session_json = '{json.dumps(response_session_json)}' WHERE session_id = '{session_id}';")
+                f"UPDATE GoingSessions SET session_json = '{json.dumps(response_session_json, ensure_ascii=False)}' WHERE session_id = '{session_id}';")
             self.conn.commit()
             return {"code": "success"}
 
-    def query_export_session(self, username, sex):
+    def query_export_session(self, username, session_id):
+        print("导出会话：", username, session_id)
         if self.user_not_exists(username):
             return {"code": "user_not_exist"}
         else:  # 用户存在，合法什么的
-            self.cursor.execute(f"UPDATE UsersInfo SET sex={sex} WHERE username='{username}';")
-        self.conn.commit()
-        return {"code": "success"}
+            # 1. 这段代码将用户的当前session导出来
+            # 1.1 查询用户目前的session，通过session_id
+            self.cursor.execute(f"SELECT session_json FROM GoingSessions WHERE session_id='{session_id}'")
+            session_json = self.cursor.fetchall()
+            session_json = session_json[0][0]  # 直接就是个字符串，拿出来又放回去了
+            # GoingSessions(username TEXT, session_id TEXT, session_json TEXT);
+            # 1.2 将用户的会话内容保存至ExportedSessions中
+            self.cursor.execute(f"INSERT INTO ExportedSessions VALUES('{username}','{session_id}', '{session_json}');")
+            self.conn.commit()
+            print("导出成功了")
+            return {"code": "success"}
 
     def query_new_session(self, username: str):
         if self.user_not_exists(username):
@@ -69,7 +78,7 @@ class QueryDao(object):
                 "session_id": session_id,
                 "session_start_time": session_start_time,
                 "session_messages": []
-            })
+            }, ensure_ascii=False)
             # 删除用户已有的所有会话！
             self.cursor.execute(f"DELETE FROM GoingSessions WHERE username = '{username}';")
             self.cursor.execute(f"INSERT INTO GoingSessions VALUES('{username}','{session_id}', '{session_json}');")
@@ -85,13 +94,24 @@ class QueryDao(object):
         self.conn.commit()
         return {"code": "success"}
 
-    def query_delete_export_session(self, username, region: str):
+    def query_delete_export_session(self, username, exported_session_id: str):
         if self.user_not_exists(username):
             return {"code": "user_not_exist"}
         else:  # 用户存在，性别合法什么的
-            self.cursor.execute(f"UPDATE UsersInfo SET region='{region}' WHERE username='{username}';")
-        self.conn.commit()
-        return {"code": "success"}
+            self.cursor.execute(f"DELETE FROM ExportedSessions WHERE username = '{username}' AND session_id = '{exported_session_id}';")
+            self.conn.commit()
+            return {"code": "success"}
+
+    def query_get_exported_sessions(self, username: str):
+        if self.user_not_exists(username):
+            return {"code": "user_not_exist"}
+        else:  # 用户存在什么的
+            # 1. 查表并返回即可
+            self.cursor.execute(f"SELECT * FROM ExportedSessions WHERE username = '{username}';")
+            res = self.cursor.fetchall()
+            session_list = [json.loads(row[2]) for row in res]
+            self.conn.commit()
+            return {"code": "success", "session_list": session_list}
 
 
 query_dao = QueryDao()
