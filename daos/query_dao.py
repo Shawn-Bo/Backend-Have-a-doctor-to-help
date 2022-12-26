@@ -80,7 +80,7 @@ class QueryDao(object):
             # ExportedSessions(username TEXT, session_id TEXT, session_json TEXT);
             # 1.2 确保会话之前没有公开过
             self.cursor.execute(f"SELECT session_json FROM PublicSessions WHERE session_id='{session_id}'")
-            if len(self.cursor.fetchall())>0:
+            if len(self.cursor.fetchall()) > 0:
                 return {"code": "session_already_published"}
             # 1.3 将用户的会话内容保存至ExportedSessions中
             self.cursor.execute(f"INSERT INTO PublicSessions VALUES('{username}','{session_id}', '{session_json}');")
@@ -119,7 +119,8 @@ class QueryDao(object):
         if self.user_not_exists(username):
             return {"code": "user_not_exist"}
         else:  # 用户存在，性别合法什么的
-            self.cursor.execute(f"DELETE FROM ExportedSessions WHERE username = '{username}' AND session_id = '{exported_session_id}';")
+            self.cursor.execute(
+                f"DELETE FROM ExportedSessions WHERE username = '{username}' AND session_id = '{exported_session_id}';")
             self.conn.commit()
             return {"code": "success"}
 
@@ -146,6 +147,7 @@ class QueryDao(object):
             } for row in res
         ]
         return {"code": "success", "session_list": session_list}
+
 
 query_dao = QueryDao()
 

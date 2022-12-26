@@ -72,8 +72,18 @@ class MeDao(object):
             return {"code": "user_not_exist"}
         else:  # 用户存在，性别合法什么的
             self.cursor.execute(f"UPDATE UsersInfo SET avatar='{avatar}' WHERE username='{username}';")
-        self.conn.commit()
-        return {"code": "success"}
+            self.conn.commit()
+            return {"code": "success"}
+
+    def certified_as_a_doctor(self, username, real_name, career_year, hospital, post, good_at, wechat):
+        print(username, real_name, career_year, hospital, post, good_at, wechat)
+        if self.user_not_exists(username):
+            return {"code": "user_not_exist"}
+        else:
+            # 直接改吧！
+            self.cursor.execute(f"INSERT INTO Doctors VALUES('{username}', '{real_name}', {career_year}, '{hospital}','{post}', '{good_at}', '{wechat}');")
+            self.conn.commit()
+            return {"code": "success"}
 
 
 me_dao = MeDao()

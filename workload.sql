@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS GoingSessions;
 CREATE TABLE UsersLogin(username TEXT, password TEXT);
 CREATE TABLE UsersInfo(username TEXT, sex INT, birthday TEXT, region TEXT, phone TEXT, info TEXT, avatar TEXT);
 CREATE TABLE HotQAs(qaid INT, question TEXT, answer TEXT);
-CREATE TABLE Doctors(name TEXT, detail TEXT);
+CREATE TABLE Doctors(uername TEXT, real_name TEXT, career_year INT, hospital TEXT, post TEXT, good_at TEXT, wechat TEXT);
 CREATE TABLE ExportedSessions(username TEXT, session_id TEXT, session_json TEXT);
 CREATE TABLE GoingSessions(username TEXT, session_id TEXT, session_json TEXT);
 CREATE TABLE PublicSessions(username TEXT, session_id TEXT, session_json TEXT);

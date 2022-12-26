@@ -6,6 +6,7 @@ from daos.query_dao import query_dao
 from daos.register_dao import register_dao
 from daos.login_dao import login_dao
 from daos.me_dao import me_dao
+from daos.doctor_dao import doctor_dao
 
 server = Flask(__name__)
 cors = CORS(server)
@@ -112,6 +113,21 @@ def user_edit_avatar():
         return me_dao.user_edit_avatar(username, avatar)
 
 
+@server.route('/user/certified_as_a_doctor', methods=['post'])
+def user_certified_as_a_doctor():
+    username = request.json.get("username")
+    real_name = request.json.get("real_name")
+    career_year = request.json.get("career_year")
+    hospital = request.json.get("hospital")
+    post = request.json.get("post")
+    good_at = request.json.get("good_at")
+    wechat = request.json.get("wechat")
+    if me_dao.user_not_exists(username):
+        return {"code": "user_not_exist"}
+    else:
+        return me_dao.certified_as_a_doctor(username, real_name, career_year, hospital, post, good_at, wechat)
+
+
 # query的维护部分
 """
 /query/get_session
@@ -166,10 +182,10 @@ def get_export_sessions():
     username = request.json.get("username")
     return query_dao.query_get_exported_sessions(username)
 
+
 @server.route('/query/get_public_sessions', methods=['post'])
 def get_public_sessions():
     return query_dao.query_get_public_sessions()
-
 
 
 @server.route('/query/delete_export_session', methods=['post'])
@@ -177,6 +193,11 @@ def delete_export_session():
     username = request.json.get("username")
     exported_session_id = request.json.get("exported_session_id")
     return query_dao.query_delete_export_session(username, exported_session_id)
+
+
+@server.route('/doctor/get_doctors', methods=['post'])
+def doctor_get_doctors():
+    return doctor_dao.get_doctors()
 
 
 server.run(port=8888, host="0.0.0.0")
