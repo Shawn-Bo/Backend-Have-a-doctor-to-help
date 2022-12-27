@@ -88,6 +88,31 @@ class QueryDao(object):
             print("发布成功了")
             return {"code": "success"}
 
+    def query_mark_publish_session(self, username, session_id):
+        print("收藏问答：", username, session_id)
+        if self.user_not_exists(username):
+            print(username, "不存在！")
+            return {"code": "user_not_exist"}
+        else:  # 用户存在，合法什么的
+            # 1. 这段代码将用户的当前session发布出来
+            # 1.1 查询用户目前的session，通过session_id
+            self.cursor.execute(f"SELECT session_json FROM PublicSessions WHERE session_id='{session_id}'")
+            session_json = self.cursor.fetchall()
+            session_json = session_json[0][0]  # 直接就是个字符串，拿出来又放回去了
+            # PublicSessions(username TEXT, session_id TEXT, session_json TEXT);
+            # 1.2 确保会话之前没有收藏过
+            self.cursor.execute(f"SELECT session_json FROM ExportedSessions WHERE session_id='{session_id}' AND "
+                                f"username='{username}'")
+            if len(self.cursor.fetchall()) > 0:
+                print("session_already_marked_or_from_yourself")
+                return {"code": "session_already_marked_or_from_yourself"}
+            # 1.3 将用户的会话内容保存至ExportedSessions中
+            self.cursor.execute(f"INSERT INTO ExportedSessions VALUES('{username}','{session_id}', '{session_json}');")
+            self.conn.commit()
+            print("收藏成功了")
+            return {"code": "success"}
+
+
     def query_new_session(self, username: str):
         if self.user_not_exists(username):
             return {"code": "user_not_exist"}

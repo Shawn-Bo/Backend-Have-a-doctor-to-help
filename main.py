@@ -176,6 +176,12 @@ def query_publish_session():
     session_id = request.json.get("session_id")
     return query_dao.query_publish_session(username, session_id)
 
+@server.route('/query/mark_publish_session', methods=['post'])
+def query_mark_publish_session():
+    username = request.json.get("username")
+    session_id = request.json.get("session_id")
+    return query_dao.query_mark_publish_session(username, session_id)
+
 
 @server.route('/query/get_exported_sessions', methods=['post'])
 def get_export_sessions():
