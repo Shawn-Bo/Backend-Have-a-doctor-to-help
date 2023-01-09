@@ -19,7 +19,8 @@ class QueryDao(object):
 
     def query_get_session(self, username, session_id):
         self.cursor.execute(f"SELECT session_json FROM GoingSessions WHERE session_id='{session_id}'")
-        session_json = self.cursor.fetchall()[0][0]
+        session_json = self.cursor.fetchall()
+        print(session_json)
         return {"code": "success", "session": session_json}
 
     def query_go_session(self, username, session_id, query_message):
@@ -47,6 +48,33 @@ class QueryDao(object):
             # 保存对话到数据库
             self.cursor.execute(
                 f"UPDATE GoingSessions SET session_json = '{json.dumps(response_session_json, ensure_ascii=False)}' WHERE session_id = '{session_id}';")
+            self.conn.commit()
+            return {"code": "success"}
+
+    def query_go_exported_session(self, username, session_id, query_message):
+        print(username, session_id, query_message)
+        if self.user_not_exists(username):
+            return {"code": "user_not_exist"}
+        else:
+            # 先为query_message赋予时间
+            message_time = str(datetime.datetime.now().strftime("%Y年%m月%d日 %H:%M"))
+            # 再搜索已有对话
+            self.cursor.execute(f"SELECT session_json FROM ExportedSessions WHERE session_id='{session_id}'")
+            session_json = self.cursor.fetchall()
+            session_json = json.loads(session_json[0][0])
+            # 根据已有对话，插入新的对话
+            session_json["session_messages"].append({
+                "message_id": len(session_json['session_messages']),
+                "message_sender": username,
+                "message_time": message_time,
+                "message_text": query_message["message_text"]
+            })
+            print("正在进行的对话", session_json)
+            # 这部分对话不用拿去做预测了
+            # 保存询问到数据库
+            self.cursor.execute(
+                f"UPDATE ExportedSessions SET session_json = '{json.dumps(session_json, ensure_ascii=False)}' WHERE "
+                f"session_id = '{session_id}';")
             self.conn.commit()
             return {"code": "success"}
 
@@ -132,13 +160,11 @@ class QueryDao(object):
         print("新建会话完毕")
         return {"code": "success", "session_id": session_id}
 
-    def query_get_export_session(self, username, birthday: str):
-        if self.user_not_exists(username):
-            return {"code": "user_not_exist"}
-        else:  # 用户存在，性别合法什么的
-            self.cursor.execute(f"UPDATE UsersInfo SET birthday='{birthday}' WHERE username='{username}';")
+    def query_get_exported_session(self, session_id: str):
+        self.cursor.execute(f"SELECT session_json FROM ExportedSessions WHERE session_id = '{session_id}';")
+        session_json = self.cursor.fetchall()
         self.conn.commit()
-        return {"code": "success"}
+        return {"code": "success", "session_json": session_json}
 
     def query_delete_export_session(self, username, exported_session_id: str):
         if self.user_not_exists(username):

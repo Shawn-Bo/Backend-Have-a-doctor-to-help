@@ -163,6 +163,14 @@ def query_go_session():
     return query_dao.query_go_session(username, session_id, query_message)
 
 
+@server.route('/query/go_exported_session', methods=['post'])
+def query_go_exported_session():
+    username = request.json.get("username")
+    session_id = request.json.get("session_id")
+    query_message = request.json.get("query_message")
+    return query_dao.query_go_exported_session(username, session_id, query_message)
+
+
 @server.route('/query/export_session', methods=['post'])
 def query_export_session():
     username = request.json.get("username")
@@ -176,6 +184,7 @@ def query_publish_session():
     session_id = request.json.get("session_id")
     return query_dao.query_publish_session(username, session_id)
 
+
 @server.route('/query/mark_publish_session', methods=['post'])
 def query_mark_publish_session():
     username = request.json.get("username")
@@ -184,9 +193,15 @@ def query_mark_publish_session():
 
 
 @server.route('/query/get_exported_sessions', methods=['post'])
-def get_export_sessions():
+def get_exported_sessions():
     username = request.json.get("username")
     return query_dao.query_get_exported_sessions(username)
+
+
+@server.route('/query/get_exported_session', methods=['post'])
+def get_exported_session():
+    session_id = request.json.get("session_id")
+    return query_dao.query_get_exported_session(session_id)
 
 
 @server.route('/query/get_public_sessions', methods=['post'])
