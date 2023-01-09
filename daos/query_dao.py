@@ -140,7 +140,6 @@ class QueryDao(object):
             print("收藏成功了")
             return {"code": "success"}
 
-
     def query_new_session(self, username: str):
         if self.user_not_exists(username):
             return {"code": "user_not_exist"}
@@ -198,6 +197,21 @@ class QueryDao(object):
             } for row in res
         ]
         return {"code": "success", "session_list": session_list}
+
+    def update_doctor_inquery(self, username: str, session_id: str, status: str):
+        # 1. 确保条目存在，否则创建条目
+        self.cursor.execute(f"SELECT * FROM InquerySessions "
+                            f"WHERE username='{username}' AND session_id='{session_id}';")
+        if len(self.cursor.fetchall()) == 0:
+            self.cursor.execute(
+                f"INSERT INTO InquerySessions "
+                f"VALUES ('{username}', '{session_id}', '{status}');")
+        else:
+            # 已有条目，则是更新表单
+            self.cursor.execute(
+                f"UPDATE InquerySessions SET status='{session_id}' "
+                f"WHERE username='{username}' AND session_id='{status}';")
+        return {"code": "success"}
 
 
 query_dao = QueryDao()

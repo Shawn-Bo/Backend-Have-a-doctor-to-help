@@ -221,4 +221,17 @@ def doctor_get_doctors():
     return doctor_dao.get_doctors()
 
 
+"""
+    接下来是和医生接受聊天信息相关的了
+"""
+
+
+@server.route('/query/update_doctor_inquery', methods=['post'])
+def query_update_doctor_inquery():
+    username = request.json.get("username")
+    session_id = request.json.get("session_id")
+    status = request.json.get("status")
+    return query_dao.update_doctor_inquery(username, session_id, status)
+
+
 server.run(port=8888, host="0.0.0.0")

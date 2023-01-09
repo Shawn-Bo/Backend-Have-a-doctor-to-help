@@ -13,7 +13,7 @@ CREATE TABLE Doctors(uername TEXT, real_name TEXT, career_year INT, hospital TEX
 CREATE TABLE ExportedSessions(username TEXT, session_id TEXT, session_json TEXT);
 CREATE TABLE GoingSessions(username TEXT, session_id TEXT, session_json TEXT);
 CREATE TABLE PublicSessions(username TEXT, session_id TEXT, session_json TEXT);
-
+CREATE TABLE InquerySessions(username TEXT, session_id TEXT, status TEXT);
 
 
 -- 用户信息
