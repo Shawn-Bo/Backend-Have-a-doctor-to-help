@@ -7,6 +7,7 @@ from daos.register_dao import register_dao
 from daos.login_dao import login_dao
 from daos.me_dao import me_dao
 from daos.doctor_dao import doctor_dao
+from graph.graph_dao import graph_dao
 
 server = Flask(__name__)
 cors = CORS(server)
@@ -232,6 +233,21 @@ def query_update_doctor_inquery():
     session_id = request.json.get("session_id")
     status = request.json.get("status")
     return query_dao.update_doctor_inquery(username, session_id, status)
+
+
+"""
+    接下来是暴露图谱端口功能
+"""
+
+
+@server.route('/graph/query', methods=['post'])
+def graph_query():
+    entity_name = request.json.get("entity_name")
+    if entity_name == "random":
+        # 随便返回一个entity_name
+        entity_name = graph_dao.query_random_entity_name()
+
+    return graph_dao.query_entity_by_name(entity_name)
 
 
 server.run(port=8888, host="0.0.0.0")

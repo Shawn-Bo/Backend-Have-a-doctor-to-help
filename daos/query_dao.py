@@ -189,13 +189,18 @@ class QueryDao(object):
         # 1. 查表并返回即可
         self.cursor.execute(f"SELECT * FROM PublicSessions;")
         res = self.cursor.fetchall()
-        session_list = [
-            {
+        session_list = []
+        for row in res:
+            username = row[0]
+            self.cursor.execute(f"SELECT avatar FROM UsersInfo WHERE username = '{username}';")
+            avatar = self.cursor.fetchall()[0][0]
+            session_list.append({
+                "avatar": avatar,
                 "username": row[0],
                 "start_time": row[1],
                 "session_detail": json.loads(row[2])
-            } for row in res
-        ]
+            })
+
         return {"code": "success", "session_list": session_list}
 
     def update_doctor_inquery(self, username: str, session_id: str, status: str):
