@@ -1,21 +1,15 @@
+import textwrap
+
 import openai
-from kgqa.qa import predict
-# Set your API key
-openai.api_key = "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"
+import requests
+
+from kgqa.utils import chatgpt_query
 
 
 def get_response(session_json: dict):
-    raw_query_text: str = session_json["session_messages"][-1]["message_text"]
+    nlq: str = session_json["session_messages"][-1]["message_text"]
     # 我们先做三元组的查询，用本地的模型解决问题
-    tri_query_text = generate_kgqt([f"【问题解析】{raw_query_text}"])[6:]  # 从三元组开始
-    # 然后调用api
-
-    print("解析后的问题三元组：", tri_query_text)
-    tri_response_text = predict(tri_query_text, raw_query_text)
-    print("响应的知识：", tri_response_text)
-    context_text =[session_json["session_messages"][i]["message_text"] for i in range(len(session_json["session_messages"]))]
-    response_text = fine_tune_response(f"之前的所有提问：{context_text}\n最后一次提问：{raw_query_text}。经过诊断可能相关的答案（注意这些内容患者没有说过也没有听过）：{tri_response_text}。")  # 省着点用
-
+    response_text = e2e_kgqa(nlq)  # 从三元组开始 端到端的问答
 
     session_json["session_messages"].append({
         "message_id": len(session_json['session_messages']),
@@ -26,15 +20,54 @@ def get_response(session_json: dict):
     return session_json
 
 
-def fine_tune_response(raw_text: str):
-    # Use the chatGPT model
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{
-            "role": "user",
-            "content": f"""现在你扮演一名医生，根据提供的信息回答患者的问题，并给予必要的支持和鼓励。注意，尽可能忠于提供的信息，可以对结果进行补充，但是不能曲解原意。提供的情报中有些信息可能无效，请忽略它们。用"您好"开始，婉拒问诊不相关的对话。{raw_text}"""
-        }]
-    )
+def e2e_kgqa(nlq, ag=True):
+    # qt
+    nlq_list = [nlq]
+    qt_url = f"http://127.0.0.1:9000/kgqt"
+    tsq = requests.post(
+        url=qt_url,
+        json={"nlq_list": nlq_list}
+    ).json()["tsq_list"][0]
+    # ta
+    ta_url = f"http://127.0.0.1:9001/kgta"
+    answer_list = requests.post(
+        url=ta_url,
+        json={"tsq": tsq}
+    ).json()["answer_list"]
+    # ta_graph
+    ta_graph_url = f"http://127.0.0.1:9001/kgta_graph"
+    answer_graph_list = requests.post(
+        url=ta_graph_url,
+        json={"tsq": tsq}
+    ).json()["answer_list"]
 
-    # Get the generated text
-    return completion["choices"][0]["message"]["content"]  # 将最好的答案作为结果返回
+    response_dict = {
+        "answer_list": answer_list,
+        "answer_graph_list": answer_graph_list
+    }
+
+    if ag:  # 目前还不知道要怎么做
+
+        response_str = chatgpt_query(textwrap.dedent(f"""
+            接下来，你需要扮演一名医生，根据给定的信息，回答患者的问题。
+            患者的问题是：{nlq},
+            已知信息：
+                1. 通过问题解析，将患者的问题转为三元组查询：{tsq}
+                2. 从知识图谱数据库查询此问题，得到结果：{answer_list}
+                3. 从医疗问答语言模型中推理问题，得到结果：{answer_graph_list}
+            下面是你的回答：
+        """))
+
+        return {"tsq": tsq,
+                "answer_list": answer_list,
+                "answer_graph_list": answer_graph_list,
+                "response_str": response_str}
+
+    else:
+        return {"tsq": tsq,
+                "answer_list": response_dict}
+
+
+if __name__ == "__main__":
+    al = e2e_kgqa("得了心脏病如何治疗？")
+    print(al)

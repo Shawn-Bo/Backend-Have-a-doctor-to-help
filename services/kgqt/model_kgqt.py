@@ -88,7 +88,7 @@ def nlq2tsq(nlq_list):
         early_stopping=True,
         use_cache=True,
         num_return_sequences=1,
-        return_dict_in_generate=True
+        # return_dict_in_generate=True
     )
 
     # 接下来，计算每个候选序列的概率
@@ -98,7 +98,6 @@ def nlq2tsq(nlq_list):
         tokenizer.decode(result_token_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True).replace(" ", "")
         for result_token_ids in result_token_ids_list]
     return tsq_list
-
 
 
 trained_model = QGModel.load_from_checkpoint(config.CKPT_PATH)
@@ -111,7 +110,8 @@ if __name__ == "__main__":
         "有哪些食物是得了心脏病不能吃的？",
         "得了新冠肺炎要怎么办？",
         "描述一下什么是百日咳？",
-        "得了心脏病治愈的希望大吗？"
+        "得了心脏病治愈的希望大吗？",
+        "百日咳的治疗时长？"
     ]
 
     tsq_list = nlq2tsq(nlq_list)

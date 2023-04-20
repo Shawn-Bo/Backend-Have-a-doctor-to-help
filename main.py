@@ -49,6 +49,15 @@ def user_get():
         return me_dao.user_get(username)
 
 
+@server.route('/user/get_avatar', methods=['post'])
+def user_get_avatar():
+    username = request.json.get("username")
+    if me_dao.user_not_exists(username):
+        return {"code": "user_not_exist"}
+    else:
+        return me_dao.user_get_avatar(username)
+
+
 @server.route('/user/edit_sex', methods=['post'])
 def user_edit_sex():
     username = request.json.get("username")
@@ -123,8 +132,11 @@ def user_certified_as_a_doctor():
     post = request.json.get("post")
     good_at = request.json.get("good_at")
     wechat = request.json.get("wechat")
+
     if me_dao.user_not_exists(username):
         return {"code": "user_not_exist"}
+    elif not me_dao.user_not_certified(username):
+        return {"code": "user_already_certified"}
     else:
         return me_dao.certified_as_a_doctor(username, real_name, career_year, hospital, post, good_at, wechat)
 
@@ -227,12 +239,20 @@ def doctor_get_doctors():
 """
 
 
-@server.route('/query/update_doctor_inquery', methods=['post'])
-def query_update_doctor_inquery():
+@server.route('/query/update_doctor_inquiry', methods=['post'])
+def query_update_doctor_inquiry():
     username = request.json.get("username")
     session_id = request.json.get("session_id")
     status = request.json.get("status")
+    print((username, session_id, status))
     return query_dao.update_doctor_inquery(username, session_id, status)
+
+
+@server.route('/query/get_inquiry_not_viewed', methods=['post'])
+def query_get_inquiry_not_viewed():
+    username = request.json.get("username")
+    detailed = request.json.get("detailed")
+    return query_dao.get_inquiry_not_viewed(username, detailed)
 
 
 """
